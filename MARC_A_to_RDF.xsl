@@ -2,6 +2,7 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:f="http://opendata.cz/xslt/functions#"
     xmlns:fn="http://www.w3.org/2005/xpath-functions"
+    xmlns:marc="http://www.loc.gov/MARC21/slim"
     
     xmlns:dcterms="http://purl.org/dc/terms/"
     xmlns:mads="http://www.loc.gov/mads/rdf/v1#"
@@ -11,55 +12,35 @@
     xmlns:skosxl="http://www.w3.org/2008/05/skos-xl#"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema"
     
-    exclude-result-prefixes="f fn"
-    xpath-default-namespace="http://www.loc.gov/MARC21/slim"
+    exclude-result-prefixes="f fn marc"
     version="2.0">
+        
+    <xsl:output encoding="UTF-8" indent="yes" method="xml" normalization-form="NFC"/>
     
-    <!-- 
-        ISSUES:
-        Content:
-        - Why are there English labels (e.g., "Databases") marked with "lat", ISO 639-2 code for Latin, in $9?
-        - Incomplete URLs as values of 670 $a (e.g., "www.Yahoo.").
-        - Heading components need to be tracked for all heading fields (150, 151, 550 etc.)
-        SPARQL:
-        - Link skos:broader, skos:narrower and skos:related / might be done with <xsl:key>
-        - Compute skos:topConceptOf
-    -->
+    <xsl:param name="config" as="document-node()"/>
     
-    <xsl:output encoding="UTF-8" indent="yes" method="xml"/>
-    
-    <xsl:param name="config"/>
-    
-    <xsl:variable name="conceptSchemeSlug" select="f:slugify($config/config/conceptSchemaLabel)"/>
+    <xsl:variable name="conceptSchemeSlug" select="f:slugify($config/config/conceptSchemeLabel)"/>
     <xsl:variable name="scheme" select="concat($config/config/namespace, 'concept-scheme/', $conceptSchemeSlug)"/>
     <xsl:variable name="conceptNs" select="concat($config/config/namespace, $conceptSchemeSlug, '/concept/')"/>
     
-    <xsl:function name="f:labelToURIs" as="xsd:string*">
-        <xsl:param name="context" as="node()"/>
-        <xsl:param name="key" as="xsd:string"/>
-        <xsl:variable name="ids" select="key('labelToID', $key, root($context))"/>
-        <!-- <xsl:message>IDs: <xsl:value-of select="$ids"/></xsl:message> -->
-        <xsl:choose>
-            <xsl:when test="$ids">
-                <xsl:value-of select="
-                    for $id in $ids
-                    return concat($conceptNs, encode-for-uri($id))
-                    "/>
-            </xsl:when>
-            <!-- <xsl:message>URI for key <xsl:value-of select="$key"/> cannot be found.</xsl:message> -->
-        </xsl:choose>
+    <xsl:function name="f:conceptsToIndices" as="xsd:string+">
+        <xsl:param name="context" as="node()+"/>
+        <xsl:sequence select="$context/string-join((
+            marc:subfield[@code = '9'],
+            f:trim(marc:subfield[@code = 'a']),
+            f:trim(marc:subfield[@code = 'v']),
+            f:trim(marc:subfield[@code = 'x']),
+            f:trim(marc:subfield[@code = 'y']),
+            f:trim(marc:subfield[@code = 'z'])
+            ), '|')"/>
     </xsl:function>
     
-    <xsl:function name="f:trim" as="xsd:string*">
-        <xsl:param name="texts" as="xsd:string*"/>
-        <xsl:choose>
-            <xsl:when test="$texts">
-                <xsl:value-of select="
-                    for $text in $texts
-                    return replace($text, '\.$', '')
-                    "/>
-            </xsl:when>
-        </xsl:choose>
+    <xsl:function name="f:conceptToURIs" as="xsd:string*">
+        <xsl:param name="context" as="node()"/>
+        <xsl:sequence select="
+            for $id in key('indicesToIDs', f:conceptsToIndices($context), root($context))
+            return concat($conceptNs, encode-for-uri($id))
+            "/>
     </xsl:function>
     
     <xsl:function name="f:slugify">
@@ -67,36 +48,46 @@
         <xsl:value-of select="encode-for-uri(replace(lower-case($text), '\s', '-'))"/>
     </xsl:function>
     
-    <xsl:key name="labelToID"
-        match="/collection/record/controlfield[@tag = '001']"
-        use="../datafield[contains('150 151 450 451', @tag)]/string-join((
-            subfield[@code = '9'],
-            f:trim(subfield[@code = 'a']),
-            f:trim(subfield[@code = 'v']),
-            f:trim(subfield[@code = 'x']),
-            f:trim(subfield[@code = 'y']),
-            f:trim(subfield[@code = 'z'])
-            ), '|')"/>
+    <xsl:function name="f:translateLang" as="xsd:string">
+        <xsl:param name="code" as="xsd:string"/>
+        <xsl:variable name="translated" select="$config/config/languageMappings/languageMapping[marc = $code]/lang"/>
+        <xsl:choose>
+            <xsl:when test="$translated"><xsl:value-of select="$translated"/></xsl:when>
+            <xsl:otherwise><xsl:value-of select="$code"/></xsl:otherwise>
+        </xsl:choose>
+    </xsl:function>
     
-    <xsl:template match="collection">
+    <xsl:function name="f:trim" as="xsd:string*">
+        <xsl:param name="texts" as="xsd:string*"/>
+        <xsl:sequence select="
+            for $text in $texts
+            return replace($text, '\.$', '')
+            "/>
+    </xsl:function>
+    
+    <xsl:key name="indicesToIDs"
+        match="/marc:collection/marc:record/marc:controlfield[@tag = '001']"
+        use="f:conceptsToIndices(../marc:datafield[contains('150 151 450 451', @tag)])"/>
+    
+    <xsl:template match="marc:collection">
         <rdf:RDF>
             <skos:ConceptScheme rdf:about="{$scheme}">
-                <dcterms:title xml:lang="en"><xsl:value-of select="$conceptSchemeLabel"/></dcterms:title>
+                <dcterms:title xml:lang="en"><xsl:value-of select="$config/config/conceptSchemeLabel"/></dcterms:title>
             </skos:ConceptScheme>
             <xsl:apply-templates/>
         </rdf:RDF>    
     </xsl:template>
     
-    <xsl:template match="record">
-        <xsl:variable name="id" select="controlfield[@tag = '001']"/>
+    <xsl:template match="marc:record">
+        <xsl:variable name="id" select="marc:controlfield[@tag = '001']"/>
         <skos:Concept rdf:about="{concat($conceptNs, encode-for-uri($id))}">
             <skos:inScheme rdf:resource="{$scheme}"/>
             <skos:notation><xsl:value-of select="$id"/></skos:notation>
-            <xsl:apply-templates select="controlfield|datafield"/>
+            <xsl:apply-templates select="marc:controlfield|marc:datafield"/>
         </skos:Concept>
     </xsl:template>
     
-    <xsl:template match="leader">
+    <xsl:template match="marc:leader">
         <!-- 05 - Record Status -->
         <xsl:variable name="recordStatus" select="substring(text(), 6, 1)"/>
         <xsl:choose>
@@ -136,8 +127,7 @@
     </xsl:template>
     
     <!-- Field templates -->
-    <xsl:template match="controlfield[@tag = '005']">
-        <!--  TODO: Model as a change note (as LCSH does)? -->
+    <xsl:template match="marc:controlfield[@tag = '005']">
         <xsl:analyze-string select="text()" regex="(\d{{4}})(\d{{2}})(\d{{2}})(\d{{2}})(\d{{2}})(\d{{2}})\.\d">
             <xsl:matching-substring>
                 <!-- Unfortunately, XSL doesn't support named groups in regexes. -->
@@ -151,8 +141,8 @@
         </xsl:analyze-string>
     </xsl:template>
     
-    <xsl:template match="controlfield[@tag = '008']">
-        <!-- TODO: http://www.loc.gov/marc/authority/ad008.html -->
+    <xsl:template match="marc:controlfield[@tag = '008']">
+        <!-- http://www.loc.gov/marc/authority/ad008.html -->
         
         <!-- 00-05 - Date entered on file -->
         <xsl:analyze-string select="substring(text(), 0, 7)" regex="(\d{{2}})(\d{{2}})(\d{{2}})">
@@ -187,21 +177,20 @@
         
     </xsl:template>
     
-    <xsl:template match="datafield[@tag = '010']">
+    <xsl:template match="marc:datafield[@tag = '010']">
         <!-- Library of Congress Control Number: http://www.loc.gov/marc/authority/ad010.html -->
-        <!-- Use for linking to LCSH -->
-        <skos:exactMatch rdf:resource="{concat('http://id.loc.gov/authorities/subjects/', translate(subfield[@code = 'a'], ' ', ''))}"/>
+        <skos:exactMatch rdf:resource="{concat('http://id.loc.gov/authorities/subjects/', translate(marc:subfield[@code = 'a'], ' ', ''))}"/>
     </xsl:template>
     
-    <xsl:template match="datafield[@tag = '053']">
+    <xsl:template match="marc:datafield[@tag = '053']">
         <!-- Should we discard the label in $c? 
             Treat LCC as another skos:ConceptScheme?
             LCSH uses mads:classification for LCC.
         -->
-        <mads:classification><xsl:value-of select="subfield[@code ='a']"/></mads:classification>
+        <mads:classification><xsl:value-of select="marc:subfield[@code ='a']"/></mads:classification>
     </xsl:template>
     
-    <xsl:template match="datafield[contains('150 151', @tag)]">
+    <xsl:template match="marc:datafield[contains('150 151', @tag)]">
         <!-- http://www.loc.gov/marc/authority/ad151.html
             Geographic term: should it be in a separate concept scheme? In LCSH, everything is inside <http://id.loc.gov/authorities/subjects> scheme.
         -->
@@ -210,15 +199,15 @@
         </xsl:call-template>
     </xsl:template>
     
-    <xsl:template match="datafield[@tag = '360']">
+    <xsl:template match="marc:datafield[@tag = '360']">
         
     </xsl:template>
     
-    <xsl:template match="datafield[contains('450 451', @tag)]">
+    <xsl:template match="marc:datafield[contains('450 451', @tag)]">
         <!-- 450 - See From Tracing-Topical Term -->
         <skosxl:altLabel>
             <skosxl:Label>
-                <skosxl:literalForm xml:lang="{subfield[@code = '9']}"><xsl:value-of select="subfield[@code ='a']"/></skosxl:literalForm>
+                <skosxl:literalForm xml:lang="{f:translateLang(marc:subfield[@code = '9'])}"><xsl:value-of select="marc:subfield[@code ='a']"/></skosxl:literalForm>
                 <xsl:call-template name="headingComponents">
                     <xsl:with-param name="context" select="."/>
                 </xsl:call-template>
@@ -226,46 +215,45 @@
         </skosxl:altLabel>
     </xsl:template>
     
-    <xsl:template match="datafield[contains('550 551', @tag)][subfield[@code = 'w'] = 'g']">
+    <xsl:template match="marc:datafield[contains('550 551', @tag)][marc:subfield[@code = 'w'] = 'g']">
         <!-- Broader concept -->
-        <!-- TODO: Needs to be transformed to link -->
         <xsl:call-template name="linkConcept">
             <xsl:with-param name="context" select="."/>
             <xsl:with-param name="linkType">skosxl:broader</xsl:with-param>
         </xsl:call-template>
     </xsl:template>
     
-    <xsl:template match="datafield[contains('550 551', @tag)][subfield[@code = 'w'] = 'h']">
+    <xsl:template match="marc:datafield[contains('550 551', @tag)][marc:subfield[@code = 'w'] = 'h']">
         <!-- Narrower concept -->
-        <!-- TODO: Needs to be transformed to link -->
         <xsl:call-template name="linkConcept">
             <xsl:with-param name="context" select="."/>
             <xsl:with-param name="linkType">skosxl:narrower</xsl:with-param>
         </xsl:call-template>
     </xsl:template>
     
-    <xsl:template match="datafield[contains('550 551', @tag)][not(subfield[@code = 'w'])]">
+    <xsl:template match="marc:datafield[contains('550 551', @tag)][not(marc:subfield[@code = 'w'])]">
         <!-- Related concept -->
-        <!-- TODO: Needs to be transformed to link -->
         <xsl:call-template name="linkConcept">
             <xsl:with-param name="context" select="."/>
             <xsl:with-param name="linkType">skosxl:related</xsl:with-param>
         </xsl:call-template>
     </xsl:template>
     
-    <xsl:template match="datafield[@tag = '667']">
+    <xsl:template match="marc:datafield[@tag = '667']">
         <!-- 667 - Nonpublic General Note -->
         <!-- TODO: If it's nonpublic, should it be included in the output? -->
-        <skos:note><xsl:value-of select="subfield[@code='a']"/></skos:note>
+        <skos:note><xsl:value-of select="marc:subfield[@code='a']"/></skos:note>
     </xsl:template>
     
-    <xsl:template match="datafield[@tag = '670']">
+    <xsl:template match="marc:datafield[@tag = '670']">
         <!-- 670 - Source Data Found -->
         <schema:citation>
             <schema:CreativeWork>
-                <schema:name><xsl:value-of select="subfield[@code='a']"/></schema:name>
-                <xsl:if test="subfield[@code = 'b']">
-                    <schema:description><xsl:value-of select="subfield[@code = 'b']"/></schema:description>
+                <schema:name><xsl:value-of select="marc:subfield[@code='a']"/></schema:name>
+                <xsl:if test="marc:subfield[@code = 'b']">
+                    <schema:description>
+                        <xsl:value-of select="marc:subfield[@code = 'b']"/>
+                    </schema:description>
                 </xsl:if>
             </schema:CreativeWork>
         </schema:citation>
@@ -275,7 +263,9 @@
         <xsl:param name="context"/>
         <skosxl:prefLabel>
             <skosxl:Label>
-                <skos:literalForm xml:lang="{$context/subfield[@code = '9']}"><xsl:value-of select="$context/subfield[@code ='a']"/></skos:literalForm>
+                <skos:literalForm xml:lang="{f:translateLang($context/marc:subfield[@code = '9'])}">
+                    <xsl:value-of select="$context/marc:subfield[@code ='a']"/>
+                </skos:literalForm>
                 <xsl:call-template name="headingComponents">
                     <xsl:with-param name="context" select="$context"/>
                 </xsl:call-template>
@@ -286,9 +276,9 @@
     <!-- Heading subfields dispatch -->
     <xsl:template name="headingComponents">
         <xsl:param name="context"/>
-        <xsl:param name="codes" select="$context/subfield/@code[contains('v x y z', .)]"/>
+        <xsl:param name="codes" select="$context/marc:subfield/@code[contains('v x y z', .)]"/>
         <xsl:if test="$codes">
-            <mads:componentlist rdf:parseType="Collection">
+            <mads:componentList rdf:parseType="Collection">
                 <xsl:for-each select="$codes">
                     <rdf:Description>
                         <rdf:type>
@@ -301,41 +291,36 @@
                                 </xsl:choose>
                             </xsl:attribute>
                         </rdf:type>
-                        <mads:elementValue xml:lang="{$context/subfield[@code = '9']}"><xsl:value-of select="$context/subfield[@code = current()]"/></mads:elementValue>
+                        <mads:elementValue xml:lang="{f:translateLang($context/marc:subfield[@code = '9'])}">
+                            <xsl:value-of select="$context/marc:subfield[@code = current()]"/>
+                        </mads:elementValue>
                     </rdf:Description>
                 </xsl:for-each>
-            </mads:componentlist>
+            </mads:componentList>
         </xsl:if>
     </xsl:template>
     
     <xsl:template name="linkConcept">
-        <xsl:param name="context" as="node()"/>
+        <xsl:param name="context" as="node()+"/>
         <xsl:param name="linkType" as="xsd:string"/>
-        <xsl:variable name="key" select="$context/string-join((
-            subfield[@code ='9'],
-            f:trim(subfield[@code ='a']),
-            f:trim(subfield[@code = 'v']),
-            f:trim(subfield[@code = 'x']),
-            f:trim(subfield[@code = 'y']),
-            f:trim(subfield[@code = 'z'])
-            ), '|')"/>
-        <xsl:variable name="uris" select="f:labelToURIs($context, $key)"/>
-        <xsl:message>URIs: <xsl:value-of select="$uris"/></xsl:message>
+        <xsl:variable name="uris" select="f:conceptToURIs($context)"/>
         <xsl:choose>
-            <xsl:when test="$uris">
+            <xsl:when test="not(empty($uris))">
                 <xsl:for-each select="$uris">
                     <xsl:element name="{$linkType}">
                         <xsl:attribute name="rdf:resource" select="."/>
                     </xsl:element>
                 </xsl:for-each>
             </xsl:when>
+            <!-- If no URI is found, create a blank node skos:Concept. -->
             <xsl:otherwise>
-                <xsl:message>No URIs</xsl:message>
-                <skos:Concept>
-                    <xsl:call-template name="mintConcept">
-                        <xsl:with-param name="context" select="$context"/>
-                    </xsl:call-template>
-                </skos:Concept>
+                <xsl:element name="{$linkType}">
+                    <skos:Concept>
+                        <xsl:call-template name="mintConcept">
+                            <xsl:with-param name="context" select="$context"/>
+                        </xsl:call-template>
+                    </skos:Concept>
+                </xsl:element>
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
