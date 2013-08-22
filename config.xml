@@ -12,4 +12,6 @@
             <lang>en</lang>
         </languageMapping>
     </languageMappings>
+    <fusekiPath>/usr/local/jena-fuseki-0.2.7/fuseki-server.jar</fusekiPath>
+    <saxonPath>/usr/local/Cellar/saxon/9.5.0.2/libexec/saxon9he.jar</saxonPath>
 </config>
