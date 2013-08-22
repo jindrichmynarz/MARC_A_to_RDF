@@ -3,6 +3,11 @@
 require "rubygems"
 require "nokogiri"
 
+desc "Parse the XML configuration" 
+task :parse_config do
+  @config = Nokogiri::XML(File.open("config.xml"))
+end
+
 desc "Transform XML into RDF/XML using XSLT"
 task :xslt => :parse_config do
   raise "Please provide path to the input XML file"\
@@ -24,17 +29,15 @@ task :xslt => :parse_config do
   puts "XSL transformation done."
 end
 
-task :parse_config do
-  @config = Nokogiri::XML(File.open("config.xml"))
-end
-
 namespace :fuseki do
   desc "Start Fuseki SPARQL server"
   task :init => :fuseki_path do
+    `java -server -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=30 -XX:+UseG1GC -Xmx4g -jar #{@fuseki_path} --config fuseki-config.ttl > /dev/null`
   end
 
   desc "Load data into Fuseki SPARQL server"
   task :load => :fuseki_path do
+    `java -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=30 -XX:+UseG1GC -Xmx16g -cp #{@fuseki_path} tdb.tdbloader --loc=db output.rdf`
   end
 
   desc "Get path to Fuseki JAR file"
