@@ -119,7 +119,8 @@ namespace :fuseki do
     raise "Fuseki configuration at #{fuseki_config_path} doesn't exist." unless File.exists? fuseki_config_path
     
     # -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=30 -XX:+UseG1GC -Xmx4g 
-    cmd = "java -server -jar #{@fuseki_path} --config #{fuseki_config_path} --port #{@fuseki_port} > /dev/null"
+    cmd = "java -server -jar #{@fuseki_path} --config #{fuseki_config_path} --home #{@fuseki_home} "\
+          "--port #{@fuseki_port} > /dev/null"
     pid = fork { exec cmd }
     Process.detach pid  # Detach the pid
     write_pid pid       # Keep track of the pid
