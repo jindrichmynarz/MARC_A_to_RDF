@@ -158,6 +158,10 @@ namespace :fuseki do
   def get_home_path(dependency)
     dep_home = ENV["#{dependency.upcase}_HOME"] ||
       @config.xpath("dep[@name = '#{dependency}']/home/text()").first
+    raise %Q{Please specify the home directory for #{dependency} by using
+             <dep name=\"#{dependency}\">
+               <home>#{File.join("path", "to", dependency, "home")}</home>
+             </dep>} unless dep_home
     missing_error = "Directory #{dep_home}, to which #{dependency.capitalize} home is set, doesn't exist."
     raise missing_error unless File.directory? dep_home
     dep_home
