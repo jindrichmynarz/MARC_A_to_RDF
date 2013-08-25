@@ -77,14 +77,14 @@ namespace :fuseki do
 
   desc "Get path to Fuseki JAR file"
   task :fuseki_path => "rake:parse_config" do
-    fuseki_path = @config.xpath("dep[@name = 'fuseki']/path/text()").first.content
+    fuseki_path = @config.xpath("dep[@name = 'fuseki']/path/text()").first
     raise "Path #{fuseki_path} is invalid." unless File.exists? fuseki_path
     @fuseki_path = fuseki_path
   end
 
   desc "Get port on which to run Fuseki"
   task :fuseki_port => "rake:parse_config" do
-    @fuseki_port = @config.xpath("dep[@name = 'fuseki']/port/text()").first.content.to_i
+    @fuseki_port = @config.xpath("dep[@name = 'fuseki']/port/text()").first.to_s.to_i
   end
 
   desc "Get Jena home directory"
@@ -157,7 +157,7 @@ namespace :fuseki do
 
   def get_home_path(dependency)
     dep_home = ENV["#{dependency.upcase}_HOME"] ||
-      @config.xpath("dep[@name = '#{dependency}']/home/text()").first.content
+      @config.xpath("dep[@name = '#{dependency}']/home/text()").first
     missing_error = "Directory #{dep_home}, to which #{dependency.capitalize} home is set, doesn't exist."
     raise missing_error unless File.directory? dep_home
     dep_home
