@@ -68,7 +68,7 @@ namespace :fuseki do
   end
 
   desc "Get Fuseki configuration"
-  task :get_config => [:jena_home, :fuseki_home, :fuseki_port, :fuseki_path]
+  task :get_config => [:jena_home, :fuseki_port, :fuseki_path]
 
   desc "Get path to Fuseki home directory"
   task :fuseki_home => "rake:parse_config" do
@@ -76,10 +76,9 @@ namespace :fuseki do
   end
 
   desc "Get path to Fuseki JAR file"
-  task :fuseki_path => "rake:parse_config" do
-    fuseki_path = @config.xpath("dep[@name = 'fuseki']/path/text()").first
-    raise "Path #{fuseki_path} is invalid." unless File.exists? fuseki_path
-    @fuseki_path = fuseki_path
+  task :fuseki_path => :fuseki_home do
+    @fuseki_path = @fuseki_home + "fuseki-server.jar"
+    raise "JAR file on #{fuseki_path} doesn't exist." unless File.exists? fuseki_path
   end
 
   desc "Get port on which to run Fuseki"
