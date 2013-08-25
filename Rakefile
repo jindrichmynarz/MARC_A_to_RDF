@@ -11,7 +11,7 @@ task :parse_config do
   @config = config.xpath("/config/deps").first
 end
 
-desc "Transform XML into RDF/XML using XSLT"
+desc "Transform XML input into RDF/XML using XSLT"
 task :xslt, [:input] => :parse_config do |t, args|
   raise "Please provide path to the input XML file "\
         "by using: rake xslt[path/to/file]" unless args[:input]
@@ -159,7 +159,7 @@ namespace :fuseki do
     dep_home = ENV["#{dependency.upcase}_HOME"] ||
       @config.xpath("dep[@name = '#{dependency}']/home/text()").first.content
     missing_error = "Directory #{dep_home}, to which #{dependency.capitalize} home is set, doesn't exist."
-    raise missing_error unless Dir.exists? dep_home
+    raise missing_error unless File.directory? dep_home
     dep_home
   end
 
