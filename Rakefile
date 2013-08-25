@@ -12,10 +12,11 @@ task :parse_config do
 end
 
 desc "Transform XML into RDF/XML using XSLT"
-task :xslt => :parse_config do
+task :xslt, [:input] => :parse_config do |t, args|
   raise "Please provide path to the input XML file "\
-        "by using input=path/to/file command-line parameter." unless ENV.key? "input"
-  input = ENV["input"]
+        "by using: rake xslt[path/to/file]" unless args[:input]
+  raise "File #{args[:input]} doesn't exist." unless File.exists? args[:input]
+  input = args[:input]
   input_size = (File.size(input).to_f / 2**20).round(2)
   available_ram = `ps -Ao rss=`.split.map(&:to_i).inject(&:+).to_f / 2**10
   recommended_heap_size = (input_size * 5).round
