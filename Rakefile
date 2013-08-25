@@ -77,8 +77,8 @@ namespace :fuseki do
 
   desc "Get path to Fuseki JAR file"
   task :fuseki_path => :fuseki_home do
-    @fuseki_path = @fuseki_home + "fuseki-server.jar"
-    raise "JAR file on #{fuseki_path} doesn't exist." unless File.exists? fuseki_path
+    @fuseki_path = File.join(@fuseki_home, "fuseki-server.jar")
+    raise "JAR file on #{@fuseki_path} doesn't exist." unless File.exists? @fuseki_path
   end
 
   desc "Get port on which to run Fuseki"
