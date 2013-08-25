@@ -29,7 +29,7 @@ task :xslt, [:input] => :parse_config do |t, args|
   saxon_path = @config.xpath("dep[@name = 'saxon']/path/text()")
   raise "Please provide path to Saxon JAR file in #{File.join("etc", "config.xml")} "\
         "using <saxonPath>path/to/saxon</saxonPath>" unless saxon_path
-  cmd = "java -Xmx#{xmx}m -jar #{saxon_path} +config=#{File.join("etc", "config.xml")}" +
+  cmd = "java -Xmx#{xmx}m -jar #{saxon_path} +config=#{File.join("etc", "config.xml")} " +
     "-xsl:MARC_A_to_RDF.xsl -s:#{input} -o:#{File.join("tmp", "output.rdf")}"
   `#{cmd}`
   puts "XSL transformation done."
