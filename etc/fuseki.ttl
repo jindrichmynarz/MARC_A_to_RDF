@@ -8,23 +8,23 @@
 [] rdf:type fuseki:Server ;
    fuseki:services (
      <#service1>
-   ) ;
-   ja:loadClass "com.hp.hpl.jena.tdb.TDB"
+   )
    .
 
+[] ja:loadClass "com.hp.hpl.jena.tdb.TDB" .
 tdb:DatasetTDB  rdfs:subClassOf  ja:RDFDataset .
 tdb:GraphTDB    rdfs:subClassOf  ja:Model .
 
-<#service1>  rdf:type fuseki:Service ;
+:service1 rdf:type fuseki:Service ;
   fuseki:name              "MARC21A" ;
   fuseki:serviceQuery      "query" ;
   fuseki:serviceQuery      "sparql" ;
   fuseki:serviceUpdate     "update" ;
   fuseki:serviceUpload     "upload" ;
-  fuseki:dataset           <#dataset1> ;
+  fuseki:dataset           :MARC21A ;
   .
 
-<#dataset1> rdf:type tdb:DatasetTDB ;
+:MARC21A rdf:type tdb:DatasetTDB ;
   tdb:location	  "db" ;
   tdb:unionDefaultGraph true
   .

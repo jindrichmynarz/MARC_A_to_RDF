@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <scheme>
+        <namespace>http://data.nli.org.il/resource/</namespace>
+        <conceptSchemeLabel>LCSH Judaica</conceptSchemeLabel>
+        <languageMappings>
+            <languageMapping>
+                <marc>heb</marc>
+                <lang>he</lang>
+            </languageMapping>
+            <languageMapping>
+                <marc>lat</marc>
+                <lang>en</lang>
+            </languageMapping>
+        </languageMappings>
+    </scheme>
+    <deps>
+        <dep name="jena">
+            <home></home>
+        </dep>
+        <dep name="fuseki">
+            <home></home>
+            <path>/usr/local/jena-fuseki-0.2.7/fuseki-server.jar</path>
+            <port>3333</port>
+        </dep>
+        <dep name="saxon">
+            <path>/usr/local/Cellar/saxon/9.5.0.2/libexec/saxon9he.jar</path>
+        </dep>
+    </deps>
+</config>

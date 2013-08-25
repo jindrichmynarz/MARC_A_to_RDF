@@ -19,9 +19,9 @@
     
     <xsl:param name="config" as="document-node()"/>
     
-    <xsl:variable name="conceptSchemeSlug" select="f:slugify($config/config/conceptSchemeLabel)"/>
-    <xsl:variable name="scheme" select="concat($config/config/namespace, 'concept-scheme/', $conceptSchemeSlug)"/>
-    <xsl:variable name="conceptNs" select="concat($config/config/namespace, $conceptSchemeSlug, '/concept/')"/>
+    <xsl:variable name="conceptSchemeSlug" select="f:slugify($config/config/scheme/conceptSchemeLabel)"/>
+    <xsl:variable name="scheme" select="concat($config/config/scheme/namespace, 'concept-scheme/', $conceptSchemeSlug)"/>
+    <xsl:variable name="conceptNs" select="concat($config/config/scheme/namespace, $conceptSchemeSlug, '/concept/')"/>
     
     <xsl:function name="f:conceptsToIndices" as="xsd:string+">
         <xsl:param name="context" as="node()+"/>
@@ -50,7 +50,9 @@
     
     <xsl:function name="f:translateLang" as="xsd:string">
         <xsl:param name="code" as="xsd:string"/>
-        <xsl:variable name="translated" select="$config/config/languageMappings/languageMapping[marc = $code]/lang"/>
+        <xsl:variable name="translated" select="
+            $config/config/scheme/languageMappings/languageMapping[marc = $code]/lang
+            "/>
         <xsl:choose>
             <xsl:when test="$translated"><xsl:value-of select="$translated"/></xsl:when>
             <xsl:otherwise><xsl:value-of select="$code"/></xsl:otherwise>
@@ -72,7 +74,9 @@
     <xsl:template match="marc:collection">
         <rdf:RDF>
             <skos:ConceptScheme rdf:about="{$scheme}">
-                <dcterms:title xml:lang="en"><xsl:value-of select="$config/config/conceptSchemeLabel"/></dcterms:title>
+                <dcterms:title xml:lang="en">
+                    <xsl:value-of select="$config/config/scheme/conceptSchemeLabel"/>
+                </dcterms:title>
             </skos:ConceptScheme>
             <xsl:apply-templates/>
         </rdf:RDF>    
