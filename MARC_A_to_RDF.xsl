@@ -198,13 +198,12 @@
         <!-- http://www.loc.gov/marc/authority/ad151.html
             Geographic term: should it be in a separate concept scheme? In LCSH, everything is inside <http://id.loc.gov/authorities/subjects> scheme.
         -->
-        <xsl:call-template name="mintConcept">
-            <xsl:with-param name="context" select="."/>
-        </xsl:call-template>
+        <xsl:call-template name="mintConcept"/>
     </xsl:template>
     
     <xsl:template match="marc:datafield[@tag = '360']">
-        
+        <!-- http://loc.gov/marc/authority/ad360.html
+             Complex See Also Reference-Subject -->
     </xsl:template>
     
     <xsl:template match="marc:datafield[contains('450 451', @tag)]">
@@ -212,9 +211,7 @@
         <skosxl:altLabel>
             <skosxl:Label>
                 <skosxl:literalForm xml:lang="{f:translateLang(marc:subfield[@code = '9'])}"><xsl:value-of select="marc:subfield[@code ='a']"/></skosxl:literalForm>
-                <xsl:call-template name="headingComponents">
-                    <xsl:with-param name="context" select="."/>
-                </xsl:call-template>
+                <xsl:call-template name="headingComponents"/>
             </skosxl:Label>
         </skosxl:altLabel>
     </xsl:template>
@@ -222,7 +219,6 @@
     <xsl:template match="marc:datafield[contains('550 551', @tag)][marc:subfield[@code = 'w'] = 'g']">
         <!-- Broader concept -->
         <xsl:call-template name="linkConcept">
-            <xsl:with-param name="context" select="."/>
             <xsl:with-param name="linkType">skosxl:broader</xsl:with-param>
         </xsl:call-template>
     </xsl:template>
@@ -230,7 +226,6 @@
     <xsl:template match="marc:datafield[contains('550 551', @tag)][marc:subfield[@code = 'w'] = 'h']">
         <!-- Narrower concept -->
         <xsl:call-template name="linkConcept">
-            <xsl:with-param name="context" select="."/>
             <xsl:with-param name="linkType">skosxl:narrower</xsl:with-param>
         </xsl:call-template>
     </xsl:template>
@@ -238,7 +233,6 @@
     <xsl:template match="marc:datafield[contains('550 551', @tag)][not(marc:subfield[@code = 'w'])]">
         <!-- Related concept -->
         <xsl:call-template name="linkConcept">
-            <xsl:with-param name="context" select="."/>
             <xsl:with-param name="linkType">skosxl:related</xsl:with-param>
         </xsl:call-template>
     </xsl:template>
@@ -264,23 +258,19 @@
     </xsl:template>
     
     <xsl:template name="mintConcept">
-        <xsl:param name="context"/>
         <skosxl:prefLabel>
             <skosxl:Label>
-                <skos:literalForm xml:lang="{f:translateLang($context/marc:subfield[@code = '9'])}">
-                    <xsl:value-of select="$context/marc:subfield[@code ='a']"/>
+                <skos:literalForm xml:lang="{f:translateLang(marc:subfield[@code = '9'])}">
+                    <xsl:value-of select="marc:subfield[@code ='a']"/>
                 </skos:literalForm>
-                <xsl:call-template name="headingComponents">
-                    <xsl:with-param name="context" select="$context"/>
-                </xsl:call-template>
+                <xsl:call-template name="headingComponents"/>
             </skosxl:Label>
         </skosxl:prefLabel>
     </xsl:template>
     
     <!-- Heading subfields dispatch -->
     <xsl:template name="headingComponents">
-        <xsl:param name="context"/>
-        <xsl:param name="codes" select="$context/marc:subfield/@code[contains('v x y z', .)]"/>
+        <xsl:param name="codes" select="marc:subfield/@code[contains('v x y z', .)]"/>
         <xsl:if test="$codes">
             <mads:componentList rdf:parseType="Collection">
                 <xsl:for-each select="$codes">
@@ -295,8 +285,8 @@
                                 </xsl:choose>
                             </xsl:attribute>
                         </rdf:type>
-                        <mads:elementValue xml:lang="{f:translateLang($context/marc:subfield[@code = '9'])}">
-                            <xsl:value-of select="$context/marc:subfield[@code = current()]"/>
+                        <mads:elementValue xml:lang="{f:translateLang(marc:subfield[@code = '9'])}">
+                            <xsl:value-of select="marc:subfield[@code = current()]"/>
                         </mads:elementValue>
                     </rdf:Description>
                 </xsl:for-each>
@@ -305,9 +295,8 @@
     </xsl:template>
     
     <xsl:template name="linkConcept">
-        <xsl:param name="context" as="node()+"/>
         <xsl:param name="linkType" as="xsd:string"/>
-        <xsl:variable name="uris" select="f:conceptToURIs($context)"/>
+        <xsl:variable name="uris" select="f:conceptToURIs(.)"/>
         <xsl:choose>
             <xsl:when test="not(empty($uris))">
                 <xsl:for-each select="$uris">
@@ -320,9 +309,7 @@
             <xsl:otherwise>
                 <xsl:element name="{$linkType}">
                     <skos:Concept>
-                        <xsl:call-template name="mintConcept">
-                            <xsl:with-param name="context" select="$context"/>
-                        </xsl:call-template>
+                        <xsl:call-template name="mintConcept"/>
                     </skos:Concept>
                 </xsl:element>
             </xsl:otherwise>
