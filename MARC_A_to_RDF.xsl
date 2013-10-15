@@ -198,6 +198,9 @@
         <!-- http://www.loc.gov/marc/authority/ad151.html
             Geographic term: should it be in a separate concept scheme? In LCSH, everything is inside <http://id.loc.gov/authorities/subjects> scheme.
         -->
+        <xsl:if test="@tag = 151">
+            <rdf:type rdf:resource="http://www.loc.gov/mads/rdf/v1#Geographic"/>
+        </xsl:if>
         <xsl:call-template name="mintConcept"/>
     </xsl:template>
     
