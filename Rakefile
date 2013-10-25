@@ -120,7 +120,7 @@ namespace :fuseki do
     
     # -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=30 -XX:+UseG1GC -Xmx4g 
     cmd = "java -server -jar #{@fuseki_path} --config #{fuseki_config_path} --home #{@fuseki_home} "\
-          "--port #{@fuseki_port} > /dev/null"
+          "--port #{@fuseki_port} --update"
     pid = fork { exec cmd }
     Process.detach pid  # Detach the pid
     write_pid pid       # Keep track of the pid
