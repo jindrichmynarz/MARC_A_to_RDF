@@ -17,7 +17,7 @@ task :xslt, [:input] => :parse_config do |t, args|
         "by using: rake xslt[path/to/file]" unless args[:input]
   raise "File #{args[:input]} doesn't exist." unless File.exists? args[:input]
   input = args[:input]
-  input_size = (File.size(input).to_f / 2**20).round(2)
+  input_size = sprintf("%.2f", File.size(input).to_f / 2**20).to_f
   available_ram = `ps -Ao rss=`.split.map(&:to_i).inject(&:+).to_f / 2**10
   recommended_heap_size = (input_size * 5).round
   raise "It is recommended to run the script on a machine with more RAM. "\
