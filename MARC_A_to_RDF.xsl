@@ -274,6 +274,7 @@
     <!-- Heading subfields dispatch -->
     <xsl:template name="headingComponents">
         <xsl:param name="codes" select="marc:subfield/@code[contains('v x y z', .)]"/>
+        <xsl:variable name="context" select="."/>
         <xsl:if test="$codes">
             <mads:componentList rdf:parseType="Collection">
                 <xsl:for-each select="$codes">
@@ -288,8 +289,8 @@
                                 </xsl:choose>
                             </xsl:attribute>
                         </rdf:type>
-                        <mads:elementValue xml:lang="{f:translateLang(marc:subfield[@code = '9'])}">
-                            <xsl:value-of select="marc:subfield[@code = current()]"/>
+                        <mads:elementValue xml:lang="{f:translateLang($context/marc:subfield[@code = '9'])}">
+                            <xsl:value-of select="$context/marc:subfield[@code = current()]"/>
                         </mads:elementValue>
                     </rdf:Description>
                 </xsl:for-each>
