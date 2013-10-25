@@ -97,8 +97,6 @@ namespace :fuseki do
     # -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=30 -XX:+UseG1GC -Xmx16g 
     `java -cp #{@fuseki_path} tdb.tdbloader --loc db --graph default #{data_path}`
     puts "Data loaded into Fuseki"
-    # Restart Fuseki server to be able to see loaded data
-    Rake::Task["fuseki:restart"].invoke
   end
 
   desc "Purge completely all TDB files"
