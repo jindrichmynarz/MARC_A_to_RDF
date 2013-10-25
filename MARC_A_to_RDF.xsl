@@ -183,7 +183,7 @@
     
     <xsl:template match="marc:datafield[@tag = '010']">
         <!-- Library of Congress Control Number: http://www.loc.gov/marc/authority/ad010.html -->
-        <skos:exactMatch rdf:resource="{concat('http://id.loc.gov/authorities/subjects/', translate(marc:subfield[@code = 'a'], ' ', ''))}"/>
+        <skos:closeMatch rdf:resource="{concat('http://id.loc.gov/authorities/subjects/', translate(marc:subfield[@code = 'a'], ' ', ''))}"/>
     </xsl:template>
     
     <xsl:template match="marc:datafield[@tag = '053']">
