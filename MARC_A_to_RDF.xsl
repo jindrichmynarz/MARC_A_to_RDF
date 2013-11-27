@@ -273,8 +273,7 @@
     
     <!-- Heading subfields dispatch -->
     <xsl:template name="headingComponents">
-        <xsl:param name="codes" select="marc:subfield/@code[contains('v x y z', .)]"/>
-        <xsl:variable name="context" select="."/>
+        <xsl:variable name="codes" select="marc:subfield[contains('v x y z', @code)]"/>
         <xsl:if test="$codes">
             <mads:componentList rdf:parseType="Collection">
                 <xsl:for-each select="$codes">
@@ -282,15 +281,15 @@
                         <rdf:type>
                             <xsl:attribute name="rdf:resource">
                                 <xsl:choose>
-                                    <xsl:when test=". = 'v'">http://www.loc.gov/mads/rdf/v1#GenreFormElement</xsl:when><!-- Dubious mapping -->
-                                    <xsl:when test=". = 'x'">http://www.loc.gov/mads/rdf/v1#Element</xsl:when>
-                                    <xsl:when test=". = 'y'">http://www.loc.gov/mads/rdf/v1#TemporalElement</xsl:when>
-                                    <xsl:when test=". = 'z'">http://www.loc.gov/mads/rdf/v1#GeographicElement</xsl:when>
+                                    <xsl:when test="@code = 'v'">http://www.loc.gov/mads/rdf/v1#GenreFormElement</xsl:when><!-- Dubious mapping -->
+                                    <xsl:when test="@code = 'x'">http://www.loc.gov/mads/rdf/v1#Element</xsl:when>
+                                    <xsl:when test="@code = 'y'">http://www.loc.gov/mads/rdf/v1#TemporalElement</xsl:when>
+                                    <xsl:when test="@code = 'z'">http://www.loc.gov/mads/rdf/v1#GeographicElement</xsl:when>
                                 </xsl:choose>
                             </xsl:attribute>
                         </rdf:type>
-                        <mads:elementValue xml:lang="{f:translateLang($context/marc:subfield[@code = '9'])}">
-                            <xsl:value-of select="$context/marc:subfield[@code = current()]"/>
+                        <mads:elementValue xml:lang="{f:translateLang(../marc:subfield[@code = '9'])}">
+                            <xsl:value-of select="."/>
                         </mads:elementValue>
                     </rdf:Description>
                 </xsl:for-each>
