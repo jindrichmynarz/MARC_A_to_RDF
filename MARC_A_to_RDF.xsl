@@ -222,28 +222,28 @@
     <xsl:template match="marc:datafield[contains('550 551', @tag)][marc:subfield[@code = 'w'] = 'g']">
         <!-- Broader concept -->
         <xsl:call-template name="linkConcept">
-            <xsl:with-param name="linkType">skosxl:broader</xsl:with-param>
+            <xsl:with-param name="linkType">skos:broader</xsl:with-param>
         </xsl:call-template>
     </xsl:template>
     
     <xsl:template match="marc:datafield[contains('550 551', @tag)][marc:subfield[@code = 'w'] = 'h']">
         <!-- Narrower concept -->
         <xsl:call-template name="linkConcept">
-            <xsl:with-param name="linkType">skosxl:narrower</xsl:with-param>
+            <xsl:with-param name="linkType">skos:narrower</xsl:with-param>
         </xsl:call-template>
     </xsl:template>
     
     <xsl:template match="marc:datafield[contains('550 551', @tag)][not(marc:subfield[@code = 'w'])]">
         <!-- Related concept -->
         <xsl:call-template name="linkConcept">
-            <xsl:with-param name="linkType">skosxl:related</xsl:with-param>
+            <xsl:with-param name="linkType">skos:related</xsl:with-param>
         </xsl:call-template>
     </xsl:template>
     
     <xsl:template match="marc:datafield[@tag = '667']">
         <!-- 667 - Nonpublic General Note -->
         <!-- TODO: If it's nonpublic, should it be included in the output? -->
-        <skos:note><xsl:value-of select="marc:subfield[@code='a']"/></skos:note>
+        <skos:editorialNote><xsl:value-of select="marc:subfield[@code='a']"/></skos:editorialNote>
     </xsl:template>
     
     <xsl:template match="marc:datafield[@tag = '670']">
@@ -263,9 +263,9 @@
     <xsl:template name="mintConcept">
         <skosxl:prefLabel>
             <skosxl:Label>
-                <skos:literalForm xml:lang="{f:translateLang(marc:subfield[@code = '9'])}">
+                <skosxl:literalForm xml:lang="{f:translateLang(marc:subfield[@code = '9'])}">
                     <xsl:value-of select="marc:subfield[@code ='a']"/>
-                </skos:literalForm>
+                </skosxl:literalForm>
                 <xsl:call-template name="headingComponents"/>
             </skosxl:Label>
         </skosxl:prefLabel>
