@@ -19,9 +19,10 @@
     
     <xsl:param name="config" as="document-node()"/>
     
-    <xsl:variable name="conceptSchemeSlug" select="f:slugify($config/config/scheme/conceptSchemeLabel)"/>
-    <xsl:variable name="scheme" select="concat($config/config/scheme/namespace, 'concept-scheme/', $conceptSchemeSlug)"/>
-    <xsl:variable name="conceptNs" select="concat($config/config/scheme/namespace, $conceptSchemeSlug, '/concept/')"/>
+    <xsl:variable name="schemeConfig" select="$config/config/scheme"/>
+    <xsl:variable name="conceptSchemeSlug" select="f:slugify($schemeConfig/conceptSchemeLabel)"/>
+    <xsl:variable name="scheme" select="concat($schemeConfig/namespace, 'concept-scheme/', $conceptSchemeSlug)"/>
+    <xsl:variable name="conceptNs" select="concat($schemeConfig/namespace, $conceptSchemeSlug, '/concept/')"/>
     
     <xsl:function name="f:conceptsToIndices" as="xsd:string+">
         <xsl:param name="context" as="node()+"/>
@@ -311,7 +312,8 @@
             <!-- If no URI is found, create a blank node skos:Concept. -->
             <xsl:otherwise>
                 <xsl:element name="{$linkType}">
-                    <skos:Concept>
+                    <skos:Concept rdf:about="{concat($conceptNs, generate-id())}">
+                        <skos:editorialNote>Temporary concept to be linked</skos:editorialNote>
                         <xsl:call-template name="mintConcept"/>
                     </skos:Concept>
                 </xsl:element>
