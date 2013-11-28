@@ -277,25 +277,27 @@
         <xsl:variable name="codes" select="marc:subfield[contains('v x y z', @code)]"/>
         <xsl:if test="$codes">
             <mads:componentList>
-                <xsl:for-each select="$codes">
-                    <mads:component>
-                        <rdf:Description>
-                            <rdf:type>
-                                <xsl:attribute name="rdf:resource">
-                                    <xsl:choose>
-                                        <xsl:when test="@code = 'v'">http://www.loc.gov/mads/rdf/v1#GenreFormElement</xsl:when><!-- Dubious mapping -->
-                                        <xsl:when test="@code = 'x'">http://www.loc.gov/mads/rdf/v1#Element</xsl:when>
-                                        <xsl:when test="@code = 'y'">http://www.loc.gov/mads/rdf/v1#TemporalElement</xsl:when>
-                                        <xsl:when test="@code = 'z'">http://www.loc.gov/mads/rdf/v1#GeographicElement</xsl:when>
-                                    </xsl:choose>
-                                </xsl:attribute>
-                            </rdf:type>
-                            <mads:elementValue xml:lang="{f:translateLang(../marc:subfield[@code = '9'])}">
-                                <xsl:value-of select="."/>
-                            </mads:elementValue>
-                        </rdf:Description>
-                    </mads:component>
-                </xsl:for-each>
+                <rdf:Description>
+                    <xsl:for-each select="$codes">
+                        <mads:component>
+                            <rdf:Description>
+                                <rdf:type>
+                                    <xsl:attribute name="rdf:resource">
+                                        <xsl:choose>
+                                            <xsl:when test="@code = 'v'">http://www.loc.gov/mads/rdf/v1#GenreFormElement</xsl:when><!-- Dubious mapping -->
+                                            <xsl:when test="@code = 'x'">http://www.loc.gov/mads/rdf/v1#Element</xsl:when>
+                                            <xsl:when test="@code = 'y'">http://www.loc.gov/mads/rdf/v1#TemporalElement</xsl:when>
+                                            <xsl:when test="@code = 'z'">http://www.loc.gov/mads/rdf/v1#GeographicElement</xsl:when>
+                                        </xsl:choose>
+                                    </xsl:attribute>
+                                </rdf:type>
+                                <mads:elementValue xml:lang="{f:translateLang(../marc:subfield[@code = '9'])}">
+                                    <xsl:value-of select="."/>
+                                </mads:elementValue>
+                            </rdf:Description>
+                        </mads:component>
+                    </xsl:for-each>
+                </rdf:Description>
             </mads:componentList>
         </xsl:if>
     </xsl:template>
