@@ -215,7 +215,7 @@
         <skosxl:altLabel>
             <skosxl:Label>
                 <skosxl:literalForm xml:lang="{f:translateLang(marc:subfield[@code = '9'])}"><xsl:value-of select="marc:subfield[@code ='a']"/></skosxl:literalForm>
-                <xsl:call-template name="headingComponents"/>
+                <xsl:call-template name="headingElements"/>
             </skosxl:Label>
         </skosxl:altLabel>
     </xsl:template>
@@ -267,16 +267,16 @@
                 <skosxl:literalForm xml:lang="{f:translateLang(marc:subfield[@code = '9'])}">
                     <xsl:value-of select="marc:subfield[@code ='a']"/>
                 </skosxl:literalForm>
-                <xsl:call-template name="headingComponents"/>
+                <xsl:call-template name="headingElements"/>
             </skosxl:Label>
         </skosxl:prefLabel>
     </xsl:template>
     
     <!-- Heading subfields dispatch -->
-    <xsl:template name="headingComponents">
+    <xsl:template name="headingElements">
         <xsl:variable name="codes" select="marc:subfield[contains('v x y z', @code)]"/>
         <xsl:if test="$codes">
-            <mads:componentList rdf:parseType="Collection">
+            <mads:elementList rdf:parseType="Collection">
                 <xsl:for-each select="$codes">
                     <rdf:Description>
                         <rdf:type>
@@ -294,7 +294,7 @@
                         </mads:elementValue>
                     </rdf:Description>
                 </xsl:for-each>
-            </mads:componentList>
+            </mads:elementList>
         </xsl:if>
     </xsl:template>
     
