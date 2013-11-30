@@ -152,9 +152,14 @@ namespace :fuseki do
       puts e.inspect
     end
   end
- 
+
+  # Get process IDs of child processes for `parent_pid`
+  # Source: http://t-a-w.blogspot.com/2010/04/how-to-kill-all-your-children.html
+  # 
+  # @param parent_pid [Fixnum] Parent process' ID
+  # @returns [Array<Fixnum>]
+  #
   def get_child_pids(parent_pid)
-    # Source: http://t-a-w.blogspot.com/2010/04/how-to-kill-all-your-children.html
     descendants = Hash.new{ |ht,k| ht[k] = [k] }
     Hash[*`ps -eo pid,ppid`.scan(/\d+/).map{ |x| x.to_i }].each{ |pid, ppid|
       descendants[ppid] << descendants[pid]
@@ -162,6 +167,11 @@ namespace :fuseki do
     descendants[parent_pid].flatten - [parent_pid]
   end
 
+  # Get path to home directory of `dependency`
+  #
+  # @param dependency [String] Either "fuseki" or "jena"
+  # @returns [String]          Path to home directory of `dependency`
+  #
   def get_home_path(dependency)
     dep_home = ENV["#{dependency.upcase}_HOME"] ||
       @config.xpath("deps/dep[@name = '#{dependency}']/home/text()").first
@@ -174,6 +184,7 @@ namespace :fuseki do
     dep_home
   end
 
+  # Path to file where Fuseki Server's process ID is stored
   def pid_path
     File.join("tmp", "fuseki.pid")
   end
@@ -191,10 +202,18 @@ namespace :fuseki do
     true
   end
 
+  # Read Fuseki Server's process ID
+  #
+  # @returns [Fixnum] Fuseki Server's process ID
+  #
   def read_pid
     File.read(pid_path).to_i
   end
 
+  # Test whether Fuseki Server is running
+  #
+  # @returns [Boolean]
+  #
   def server_running?
     if File.exist? pid_path
       pid = read_pid
@@ -208,6 +227,10 @@ namespace :fuseki do
     end
   end
 
+  # Save Fuseki Server's process ID to a file
+  #
+  # @param pid [Fixnum] Fuseki Server's process ID
+  #
   def write_pid(pid)
     File.open(pid_path, "w") { |f| f.write(pid) }
   end
@@ -229,6 +252,10 @@ namespace :sparql do
   end
 
   # Adds named graph URI to SPARQL queries
+  # 
+  # @param query_template [String] SPARQL query with ?graph variable to be replaced
+  # @returns [String]
+  #
   def add_graph(query_template)
     query_template.gsub(/\?graph/i, "<#{@named_graph}>")
   end
