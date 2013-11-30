@@ -10,7 +10,7 @@ require "timeout"
 desc "Parse the XML configuration" 
 task :parse_config do
   config = Nokogiri::XML(File.open(File.join("etc", "config.xml")))
-  @config = config.xpath("/config/deps").first
+  @config = config.xpath("/config").first
 end
 
 desc "Transform XML input into RDF/XML using XSLT"
@@ -28,7 +28,7 @@ task :xslt, [:input] => :parse_config do |t, args|
         "You can force the transformation using the force=true."\
         unless (available_ram > recommended_heap_size) || (ENV.key? "force")
   xmx = recommended_heap_size > 512 ? recommended_heap_size : 512
-  saxon_path = @config.xpath("dep[@name = 'saxon']/path/text()")
+  saxon_path = @config.xpath("deps/dep[@name = 'saxon']/path/text()")
   raise "Please provide path to Saxon JAR file in #{File.join("etc", "config.xml")} "\
         "using <saxonPath>path/to/saxon</saxonPath>" unless saxon_path
   cmd = "java -Xmx#{xmx}m -jar #{saxon_path} +config=#{File.join("etc", "config.xml")} " +
@@ -85,7 +85,7 @@ namespace :fuseki do
 
   desc "Get port on which to run Fuseki"
   task :fuseki_port => "rake:parse_config" do
-    @fuseki_port = @config.xpath("dep[@name = 'fuseki']/port/text()").first.to_s.to_i
+    @fuseki_port = @config.xpath("deps/dep[@name = 'fuseki']/port/text()").first.to_s.to_i
   end
 
   desc "Get Jena home directory"
@@ -103,8 +103,8 @@ namespace :fuseki do
 
   desc "Create named graph URI"
   task :named_graph => "rake:parse_config" do
-    base_uri = @config.xpath("scheme/namespace/text()").first
-    dataset_name = @config.xpath("scheme/conceptSchemeLabel/text()").first
+    base_uri = @config.xpath("scheme/namespace/text()").first.to_s
+    dataset_name = @config.xpath("scheme/conceptSchemeLabel/text()").first.to_s
     dataset_path = "dataset/" + URI::encode(dataset_name.downcase.gsub("\s", "-"))
     @named_graph = base_uri + dataset_path
   end
@@ -165,7 +165,7 @@ namespace :fuseki do
 
   def get_home_path(dependency)
     dep_home = ENV["#{dependency.upcase}_HOME"] ||
-      @config.xpath("dep[@name = '#{dependency}']/home/text()").first
+      @config.xpath("deps/dep[@name = '#{dependency}']/home/text()").first
     raise %Q{Please specify the home directory for #{dependency} by using
              <dep name=\"#{dependency}\">
                <home>#{File.join("path", "to", dependency, "home")}</home>
