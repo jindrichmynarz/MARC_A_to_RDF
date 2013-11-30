@@ -313,7 +313,7 @@
             <xsl:otherwise>
                 <xsl:element name="{$linkType}">
                     <skos:Concept rdf:about="{concat($conceptNs, generate-id())}">
-                        <skos:editorialNote>Temporary concept to be linked</skos:editorialNote>
+                        <skos:editorialNote xml:lang="en">Temporary concept to be linked</skos:editorialNote>
                         <xsl:call-template name="mintConcept"/>
                     </skos:Concept>
                 </xsl:element>
