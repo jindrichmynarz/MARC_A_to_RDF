@@ -2,6 +2,7 @@
 
 require "rubygems"
 require "nokogiri"
+require "open-uri"
 require "socket"
 require "sparql/client"
 require "timeout"
@@ -69,7 +70,7 @@ namespace :fuseki do
   end
 
   desc "Get Fuseki configuration"
-  task :get_config => [:jena_home, :fuseki_port, :fuseki_path]
+  task :get_config => [:jena_home, :fuseki_port, :fuseki_path, :named_graph]
 
   desc "Get path to Fuseki home directory"
   task :fuseki_home => "rake:parse_config" do
@@ -96,8 +97,16 @@ namespace :fuseki do
   task :load => [:convert_data, :get_config] do
     data_path = File.join("tmp", "output.nt")
     # -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=30 -XX:+UseG1GC -Xmx16g 
-    `java -cp #{@fuseki_path} tdb.tdbloader --loc db --graph default #{data_path}`
+    `java -cp #{@fuseki_path} tdb.tdbloader --loc db --graph #{@named_graph} #{data_path}`
     puts "Data loaded into Fuseki"
+  end
+
+  desc "Create named graph URI"
+  task :named_graph => "rake:parse_config" do
+    base_uri = @config.xpath("scheme/namespace/text()").first
+    dataset_name = @config.xpath("scheme/conceptSchemeLabel/text()").first
+    dataset_path = "dataset/" + URI::encode(dataset_name.downcase.gsub("\s", "-"))
+    @named_graph = base_uri + dataset_path
   end
 
   desc "Purge completely all TDB files"
@@ -207,7 +216,7 @@ end
 
 namespace :sparql do
   desc "Establish connection to SPARQL Update endpoint"
-  task :connect => "fuseki:fuseki_port" do
+  task :connect => ["fuseki:fuseki_port", "fuseki:named_graph"] do
     endpoint_url = "http://localhost:#{@fuseki_port}/MARC21A/update"
     @sparql = SPARQL::Client.new endpoint_url
   end
@@ -216,7 +225,12 @@ namespace :sparql do
   task :enrich => :connect do
     file_names = Dir[File.join("queries", "enrichment", "*.rq")]
     file_names.each do |file_name|
-      @sparql.update(File.read(file_name))
+      @sparql.update(add_graph(File.read(file_name)))
     end
+  end
+
+  # Adds named graph URI to SPARQL queries
+  def add_graph(query_template)
+    query_template.gsub(/\?graph/i, "<#{@named_graph}>")
   end
 end
