@@ -8,7 +8,8 @@
 [] rdf:type fuseki:Server ;
    fuseki:services (
      <#service1>
-   )
+   ) ;
+   ja:context [ ja:cxtName "arq:queryTimeout" ;  ja:cxtValue "600000" ] ;
    .
 
 [] ja:loadClass "com.hp.hpl.jena.tdb.TDB" .
