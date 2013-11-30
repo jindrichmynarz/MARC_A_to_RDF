@@ -3,6 +3,7 @@
 require "rubygems"
 require "nokogiri"
 require "socket"
+require "sparql/client"
 require "timeout"
 
 desc "Parse the XML configuration" 
@@ -201,5 +202,21 @@ namespace :fuseki do
 
   def write_pid(pid)
     File.open(pid_path, "w") { |f| f.write(pid) }
+  end
+end
+
+namespace :sparql do
+  desc "Establish connection to SPARQL Update endpoint"
+  task :connect => "fuseki:fuseki_port" do
+    endpoint_url = "http://localhost:#{@fuseki_port}/MARC21A/update"
+    @sparql = SPARQL::Client.new(endpoint_url, method: :post, protocol: "1.1")
+  end
+
+  desc "Enrich dataset with inferred triples using SPARQL Update"
+  task :enrich => :connect do
+    file_names = Dir[File.join("queries", "enrichment", "*.rq")]
+    file_names.each do |file_name|
+      @sparql.update(File.read(file_name))
+    end
   end
 end
