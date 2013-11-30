@@ -216,7 +216,7 @@ end
 
 namespace :sparql do
   desc "Establish connection to SPARQL Update endpoint"
-  task :connect => ["fuseki:fuseki_port", "fuseki:named_graph"] do
+  task :connect => ["fuseki:check_running", "fuseki:fuseki_port", "fuseki:named_graph"] do
     endpoint_url = "http://localhost:#{@fuseki_port}/MARC21A/update"
     @sparql = SPARQL::Client.new endpoint_url
   end
