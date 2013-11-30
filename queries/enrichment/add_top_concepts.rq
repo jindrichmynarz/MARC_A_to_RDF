@@ -1,6 +1,5 @@
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
-WITH <default>
 INSERT {
   ?concept skos:topConceptOf ?scheme .
   ?scheme skos:hasTopConcept ?concept .

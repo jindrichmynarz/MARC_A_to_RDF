@@ -209,7 +209,7 @@ namespace :sparql do
   desc "Establish connection to SPARQL Update endpoint"
   task :connect => "fuseki:fuseki_port" do
     endpoint_url = "http://localhost:#{@fuseki_port}/MARC21A/update"
-    @sparql = SPARQL::Client.new(endpoint_url, :method => :post, :protocol => "1.1")
+    @sparql = SPARQL::Client.new endpoint_url
   end
 
   desc "Enrich dataset with inferred triples using SPARQL Update"
