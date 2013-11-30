@@ -7,7 +7,7 @@ require "socket"
 require "sparql/client"
 require "timeout"
 
-desc "Parse the XML configuration" 
+# Parse XML configuration 
 task :parse_config do
   config = Nokogiri::XML(File.open(File.join("etc", "config.xml")))
   @config = config.xpath("/config").first
@@ -37,8 +37,9 @@ task :xslt, [:input] => :parse_config do |t, args|
   puts "XSL transformation done."
 end
 
+# Tasks for interacting with Fuseki server
 namespace :fuseki do
-  desc "Check if the Fuseki server is running"
+  # Check if the Fuseki server is running
   task :check_running do
     raise "Fuseki server isn't running" unless server_running?
   end
@@ -62,33 +63,33 @@ namespace :fuseki do
     puts "Fuseki server dropped all data."
   end
 
-  desc "Dump data to a file"
+  desc "Dump data to tmp/tdb_dump.nt"
   task :dump => :get_config do
     output_path = File.join("tmp", "tdb_dump.nt")
     `java -cp #{@fuseki_path} tdb.tdbdump --loc db > #{output_path}` 
     puts "Data dumped to #{output_path}."
   end
 
-  desc "Get Fuseki configuration"
+  # Get Fuseki configuration
   task :get_config => [:jena_home, :fuseki_port, :fuseki_path, :named_graph]
 
-  desc "Get path to Fuseki home directory"
+  # Get path to Fuseki home directory
   task :fuseki_home => "rake:parse_config" do
     @fuseki_home = get_home_path "fuseki"
   end
 
-  desc "Get path to Fuseki JAR file"
+  # Get path to Fuseki JAR file
   task :fuseki_path => :fuseki_home do
     @fuseki_path = File.join(@fuseki_home, "fuseki-server.jar")
     raise "JAR file on #{@fuseki_path} doesn't exist." unless File.exists? @fuseki_path
   end
 
-  desc "Get port on which to run Fuseki"
+  # Get port on which to run Fuseki
   task :fuseki_port => "rake:parse_config" do
     @fuseki_port = @config.xpath("deps/dep[@name = 'fuseki']/port/text()").first.to_s.to_i
   end
 
-  desc "Get Jena home directory"
+  # Get Jena home directory
   task :jena_home => "rake:parse_config" do
     @jena_home = get_home_path "jena"
   end
@@ -96,12 +97,11 @@ namespace :fuseki do
   desc "Load data into Fuseki SPARQL server"
   task :load => [:convert_data, :get_config] do
     data_path = File.join("tmp", "output.nt")
-    # -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=30 -XX:+UseG1GC -Xmx16g 
     `java -cp #{@fuseki_path} tdb.tdbloader --loc db --graph #{@named_graph} #{data_path}`
     puts "Data loaded into Fuseki"
   end
 
-  desc "Create named graph URI"
+  # Mint dataset's named graph URI
   task :named_graph => "rake:parse_config" do
     base_uri = @config.xpath("scheme/namespace/text()").first.to_s
     dataset_name = @config.xpath("scheme/conceptSchemeLabel/text()").first.to_s
@@ -126,7 +126,6 @@ namespace :fuseki do
     fuseki_config_path = File.join("etc", "fuseki.ttl")
     raise "Fuseki configuration at #{fuseki_config_path} doesn't exist." unless File.exists? fuseki_config_path
     
-    # -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=30 -XX:+UseG1GC -Xmx4g 
     cmd = "java -server -jar #{@fuseki_path} --config #{fuseki_config_path} --home #{@fuseki_home} "\
           "--port #{@fuseki_port} --update"
     pid = fork { exec cmd }
@@ -215,7 +214,7 @@ namespace :fuseki do
 end
 
 namespace :sparql do
-  desc "Establish connection to SPARQL Update endpoint"
+  # Establish connection to SPARQL Update endpoint
   task :connect => ["fuseki:check_running", "fuseki:fuseki_port", "fuseki:named_graph"] do
     endpoint_url = "http://localhost:#{@fuseki_port}/MARC21A/update"
     @sparql = SPARQL::Client.new endpoint_url
