@@ -26,5 +26,6 @@ tdb:GraphTDB    rdfs:subClassOf  ja:Model .
   .
 
 :MARC21A rdf:type tdb:DatasetTDB ;
-  tdb:location	  "db"
+  tdb:location	  "db" ;
+  tdb:unionDefaultGraph true
   .
