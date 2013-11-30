@@ -63,9 +63,9 @@ namespace :fuseki do
     puts "Fuseki server dropped all data."
   end
 
-  desc "Dump data to tmp/tdb_dump.nt"
+  desc "Dump data to tmp/dump.nq"
   task :dump => :get_config do
-    output_path = File.join("tmp", "tdb_dump.nt")
+    output_path = File.join("tmp", "dump.nq")
     `java -cp #{@fuseki_path} tdb.tdbdump --loc db > #{output_path}` 
     puts "Data dumped to #{output_path}."
   end
