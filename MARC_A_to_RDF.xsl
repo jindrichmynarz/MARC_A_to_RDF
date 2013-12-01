@@ -22,7 +22,7 @@
     <!-- Global variables -->
     
     <xsl:variable name="schemeConfig" select="$config/config/scheme"/>
-    <xsl:variable name="namespace" select="$config/namespace"/>
+    <xsl:variable name="namespace" select="$schemeConfig/namespace"/>
     <xsl:variable name="conceptSchemeSlug" select="f:slugify($schemeConfig/conceptSchemeLabel)"/>
     <xsl:variable name="scheme" select="concat($namespace, 'concept-scheme/', $conceptSchemeSlug)"/>
     <xsl:variable name="conceptNs" select="concat($namespace, $conceptSchemeSlug, '/concept/')"/>
@@ -32,12 +32,10 @@
     <xsl:function name="f:mintClassURI" as="xsd:anyURI">
         <xsl:param name="classLabel" as="xsd:string"/>
         <xsl:param name="context" as="node()"/>
-        <xsl:value-of select="string-join(
-            ($namespace,
-            encode-for-uri(replace(lower-case($classLabel), '\s', '-')),
+        <xsl:value-of select="concat($namespace, string-join(
+            (encode-for-uri(replace(lower-case($classLabel), '\s', '-')),
             generate-id($context)),
-            '/'
-        )"/>
+            '/'))"/>
     </xsl:function>
     
     <xsl:function name="f:conceptsToIndices" as="xsd:string+">
@@ -225,9 +223,13 @@
         <xsl:call-template name="mintConcept"/>
     </xsl:template>
     
-    <xsl:template match="marc:datafield[@tag = '360']/subfield[@code = 'a']">
+    <xsl:template match="marc:datafield[@tag = '360']">
         <!-- http://loc.gov/marc/authority/ad360.html
              Complex See Also Reference-Subject -->
+        <xsl:apply-templates/>
+    </xsl:template>
+    
+    <xsl:template match="subfield[@code = 'a'][parent::marc:datafield[@tag = '360']]">
         <xsl:variable name="linkType">skos:related</xsl:variable>
         <xsl:variable name="references" select="tokenize(replace(., '^\s*;|;\s*$', ''), '\s*;\s*')"/>
         <xsl:variable name="context" select="."/>
@@ -255,11 +257,11 @@
                                     <skosxl:literalForm><xsl:value-of select="$prefLabel"/></skosxl:literalForm>
                                     <xsl:if test="$elements">
                                         <mads:elementList rdf:parseType="Collection">
-                                           <xsl:for-each select="$elements">
-                                               <mads:Element rdf:about="{f:mintClassURI('Element', $context)}">
-                                                   <mads:elementValue><xsl:value-of select="."/></mads:elementValue>
-                                               </mads:Element>
-                                           </xsl:for-each>
+                                            <xsl:for-each select="$elements">
+                                                <mads:Element rdf:about="{f:mintClassURI('Element', $context)}">
+                                                    <mads:elementValue><xsl:value-of select="."/></mads:elementValue>
+                                                </mads:Element>
+                                            </xsl:for-each>
                                         </mads:elementList>
                                     </xsl:if>
                                 </skosxl:Label>
@@ -268,7 +270,7 @@
                     </xsl:element>
                 </xsl:otherwise>
             </xsl:choose>
-        </xsl:for-each>
+        </xsl:for-each> 
     </xsl:template>
     
     <xsl:template match="marc:datafield[contains('450 451', @tag)]">
