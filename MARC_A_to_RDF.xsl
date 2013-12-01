@@ -17,7 +17,7 @@
         
     <xsl:output encoding="UTF-8" indent="yes" method="xml" normalization-form="NFC"/>
     
-    <xsl:param name="config" as="document-node()"/>
+    <xsl:param name="config" as="document-node()" select="document('etc/config.xml')"/>
     
     <!-- Global variables -->
     
@@ -217,7 +217,7 @@
         <!-- http://www.loc.gov/marc/authority/ad151.html
             Geographic term: should it be in a separate concept scheme? In LCSH, everything is inside <http://id.loc.gov/authorities/subjects> scheme.
         -->
-        <xsl:if test="@tag = 151">
+        <xsl:if test="@tag = '151'">
             <rdf:type rdf:resource="http://www.loc.gov/mads/rdf/v1#Geographic"/>
         </xsl:if>
         <xsl:call-template name="mintConcept"/>
@@ -229,7 +229,7 @@
         <xsl:apply-templates/>
     </xsl:template>
     
-    <xsl:template match="subfield[@code = 'a'][parent::marc:datafield[@tag = '360']]">
+    <xsl:template match="marc:subfield[@code = 'a'][parent::marc:datafield[@tag = '360']]">
         <xsl:variable name="linkType">skos:related</xsl:variable>
         <xsl:variable name="references" select="tokenize(replace(., '^\s*;|;\s*$', ''), '\s*;\s*')"/>
         <xsl:variable name="context" select="."/>
