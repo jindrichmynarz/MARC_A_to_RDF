@@ -241,7 +241,7 @@
                 <xsl:when test="not(empty($uris))">
                     <xsl:for-each select="$uris">
                         <xsl:element name="{$linkType}">
-                            <xsl:attribute name="rdf:resource" select="."/>
+                            <xsl:attribute name="rdf:resource" select="concat($conceptNs, encode-for-uri(.))"/>
                         </xsl:element> 
                     </xsl:for-each>
                 </xsl:when>
@@ -255,7 +255,7 @@
                             <skos:prefLabel>
                                 <skosxl:Label rdf:about="{f:mintClassURI('Label', $context)}">
                                     <skosxl:literalForm><xsl:value-of select="$prefLabel"/></skosxl:literalForm>
-                                    <xsl:if test="$elements">
+                                    <xsl:if test="not(empty($elements))">
                                         <mads:elementList rdf:parseType="Collection">
                                             <xsl:for-each select="$elements">
                                                 <mads:Element rdf:about="{f:mintClassURI('Element', $context)}">
