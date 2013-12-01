@@ -226,7 +226,9 @@
     <xsl:template match="marc:datafield[@tag = '360']">
         <!-- http://loc.gov/marc/authority/ad360.html
              Complex See Also Reference-Subject -->
+        <!-- Commenting out for the moment. Parsing is too irregular.
         <xsl:apply-templates/>
+        -->
     </xsl:template>
     
     <xsl:template match="marc:subfield[@code = 'a'][parent::marc:datafield[@tag = '360']]">
