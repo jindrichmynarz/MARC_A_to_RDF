@@ -20,9 +20,21 @@
     <xsl:param name="config" as="document-node()"/>
     
     <xsl:variable name="schemeConfig" select="$config/config/scheme"/>
+    <xsl:variable name="namespace" select="$config/namespace"/>
     <xsl:variable name="conceptSchemeSlug" select="f:slugify($schemeConfig/conceptSchemeLabel)"/>
-    <xsl:variable name="scheme" select="concat($schemeConfig/namespace, 'concept-scheme/', $conceptSchemeSlug)"/>
-    <xsl:variable name="conceptNs" select="concat($schemeConfig/namespace, $conceptSchemeSlug, '/concept/')"/>
+    <xsl:variable name="scheme" select="concat($namespace, 'concept-scheme/', $conceptSchemeSlug)"/>
+    <xsl:variable name="conceptNs" select="concat($namespace, $conceptSchemeSlug, '/concept/')"/>
+    
+    <xsl:function name="f:mintClassURI" as="xsd:anyURI">
+        <xsl:param name="classLabel" as="xsd:string"/>
+        <xsl:param name="context" as="node()"/>
+        <xsl:value-of select="string-join(
+            ($namespace,
+            encode-for-uri(replace(lower-case($classLabel), '\s', '-')),
+            generate-id($context)),
+            '/'
+        )"/>
+    </xsl:function>
     
     <xsl:function name="f:conceptsToIndices" as="xsd:string+">
         <xsl:param name="context" as="node()+"/>
@@ -213,7 +225,7 @@
     <xsl:template match="marc:datafield[contains('450 451', @tag)]">
         <!-- 450 - See From Tracing-Topical Term -->
         <skosxl:altLabel>
-            <skosxl:Label>
+            <skosxl:Label rdf:about="{f:mintClassURI('Label', .)}">
                 <skosxl:literalForm xml:lang="{f:translateLang(marc:subfield[@code = '9'])}"><xsl:value-of select="marc:subfield[@code ='a']"/></skosxl:literalForm>
                 <xsl:call-template name="headingElements"/>
             </skosxl:Label>
@@ -250,7 +262,7 @@
     <xsl:template match="marc:datafield[@tag = '670']">
         <!-- 670 - Source Data Found -->
         <schema:citation>
-            <schema:CreativeWork>
+            <schema:CreativeWork rdf:about="{f:mintClassURI('Creative work', .)}">
                 <schema:name><xsl:value-of select="marc:subfield[@code='a']"/></schema:name>
                 <xsl:if test="marc:subfield[@code = 'b']">
                     <schema:description>
@@ -263,7 +275,7 @@
     
     <xsl:template name="mintConcept">
         <skosxl:prefLabel>
-            <skosxl:Label>
+            <skosxl:Label rdf:about="{f:mintClassURI('Label', .)}">
                 <skosxl:literalForm xml:lang="{f:translateLang(marc:subfield[@code = '9'])}">
                     <xsl:value-of select="marc:subfield[@code ='a']"/>
                 </skosxl:literalForm>
@@ -278,7 +290,7 @@
         <xsl:if test="$codes">
             <mads:elementList rdf:parseType="Collection">
                 <xsl:for-each select="$codes">
-                    <rdf:Description>
+                    <rdf:Description rdf:about="{f:mintClassURI('Element', .)}">
                         <rdf:type>
                             <xsl:attribute name="rdf:resource">
                                 <xsl:choose>
@@ -312,7 +324,7 @@
             <!-- If no URI is found, create a blank node skos:Concept. -->
             <xsl:otherwise>
                 <xsl:element name="{$linkType}">
-                    <skos:Concept rdf:about="{concat($conceptNs, generate-id())}">
+                    <skos:Concept rdf:about="{f:mintClassURI('Concept', .)}">
                         <skos:editorialNote xml:lang="en">Temporary concept to be linked</skos:editorialNote>
                         <xsl:call-template name="mintConcept"/>
                     </skos:Concept>
