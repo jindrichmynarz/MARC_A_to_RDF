@@ -245,7 +245,7 @@ namespace :sparql do
 
   desc "Enrich dataset with inferred triples using SPARQL Update"
   task :enrich => :connect do
-    file_names = Dir[File.join("queries", "enrichment", "*.rq")]
+    file_names = Dir[File.join("queries", "enrichment", "*.ru")]
     
     # Metadata generation needs to come last
     metadata_request_index = file_names.index { |file_name| file_name.end_with? "generate_metadata.ru" }
