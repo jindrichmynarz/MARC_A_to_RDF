@@ -6,7 +6,7 @@ The transformation was developed for an [LOD2 Publink](http://lod2.eu/Article/Pu
 
 ## Steps
 
-Steps of the transformation are implemented as Rake tasks. Use `rake -T` to list all available tasks.
+Steps of the transformation are implemented as Rake tasks. Use `rake -T` to list all available tasks. Before running any of the tasks edit the configuration file in `etc/config.xml`.
 
 1. `rake xslt[path/to/marc-21-a.xml]` to execute the XSL transformation from MARC XML to RDF/XML (file `tmp/output.rdf`).
 2. `rake fuseki:load` to load the created RDF in Jena TDB.

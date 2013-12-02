@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
+    <!-- Configuration of the transformed concept scheme -->
     <scheme>
+        <!-- Base namespace for all minted URIs --> 
         <namespace>http://data.nli.org.il/resource/</namespace>
+        <!-- Label of the transformed concept scheme -->
         <conceptSchemeLabel>LCSH Judaica</conceptSchemeLabel>
+        <!-- Mappings of MARC script codes to ISO 639-1 language codes --> 
         <languageMappings>
             <languageMapping>
                 <marc>heb</marc>
@@ -14,16 +18,20 @@
             </languageMapping>
         </languageMappings>
     </scheme>
+    <!-- Configuration of software dependencies -->
     <deps>
         <dep name="jena">
+            <!-- Path to $JENA_HOME. If you have Jena installed, you can leave this empty. -->
             <home></home>
         </dep>
         <dep name="fuseki">
+            <!-- Path to $FUSEKI_HOME. If you have Fuseki installed, you can leave this empty. -->
             <home></home>
-            <path>/usr/local/jena-fuseki-0.2.7/fuseki-server.jar</path>
+            <!-- Port that will be used by Fuseki server -->
             <port>3333</port>
         </dep>
         <dep name="saxon">
+            <!-- Path to Saxon 9.x JAR file -->
             <path>/usr/local/Cellar/saxon/9.5.0.2/libexec/saxon9he.jar</path>
         </dep>
     </deps>
