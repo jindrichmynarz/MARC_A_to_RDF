@@ -246,6 +246,11 @@ namespace :sparql do
   desc "Enrich dataset with inferred triples using SPARQL Update"
   task :enrich => :connect do
     file_names = Dir[File.join("queries", "enrichment", "*.rq")]
+    
+    # Metadata generation needs to come last
+    metadata_request_index = file_names.index { |file_name| file_name.end_with? "generate_metadata.ru" }
+    file_names.push(file_names.delete_at(metadata_request_index))
+
     file_names.each do |file_name|
       @sparql.update(add_graph(File.read(file_name)))
     end

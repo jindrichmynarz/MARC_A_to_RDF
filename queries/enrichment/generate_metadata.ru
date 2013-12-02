@@ -3,7 +3,7 @@ PREFIX void:    <http://rdfs.org/ns/void#>
 PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>
 
 INSERT {
-  GRAPH ?graph {
+  GRAPH ?metadataGraph {
     ?graph a void:Dataset ;
       dcterms:lastModified ?now ;
       void:vocabulary ?vocabulary ;
@@ -64,4 +64,5 @@ WHERE {
     }
   }
   BIND (xsd:dateTime(NOW()) AS ?now)
+  BIND (IRI(CONCAT(STR(?graph), "/metadata")) AS ?metadataGraph) 
 }
