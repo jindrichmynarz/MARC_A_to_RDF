@@ -1,6 +1,7 @@
 #!/usr/bin/rake
 
 require "rubygems"
+require "digest/sha1"
 require "nokogiri"
 require "open-uri"
 require "socket"
@@ -63,11 +64,36 @@ namespace :fuseki do
     puts "Fuseki server dropped all data."
   end
 
-  desc "Dump data to tmp/dump.nq"
-  task :dump => :get_config do
+  desc "Dump data to into tmp directory"
+  task :dump => [:get_config, :jena_home] do
     output_path = File.join("tmp", "dump.nq")
-    `java -cp #{@fuseki_path} tdb.tdbdump --loc db > #{output_path}` 
-    puts "Data dumped to #{output_path}."
+    `java -cp #{@fuseki_path} tdb.tdbdump --loc db > #{output_path}`
+    
+    # Memoization hash
+    @graph_to_file = {}
+
+    File.open(output_path).each_line do |line|
+      ntriple, graph = split_nquad line
+      file = get_output_file(graph)
+      file.puts ntriple 
+    end
+   
+    File.delete output_path # Delete temporary dump file
+
+    # Close all output files
+    ntriple_files = @graph_to_file.values.map { |file| file.path }
+    @graph_to_file.each_value { |file| file.close }
+  
+    rdfcat = File.join(@jena_home, "bin", "rdfcat")
+    turtle_files = ntriple_files.map do |file|
+      turtle_file_name = File.basename(file, File.extname(file)) + ".ttl"
+      turtle_file = File.join("tmp", turtle_file_name)
+      `#{rdfcat} -out ttl #{file} > #{turtle_file}`
+      File.delete file # Delete temporary N-Triples file
+      turtle_file_name
+    end
+
+    puts "Data dumped into files: #{turtle_files.join(", ")}"
   end
 
   # Get Fuseki configuration
@@ -184,6 +210,25 @@ namespace :fuseki do
     dep_home
   end
 
+  # Get handle for file where data from `graph` is to be dumped
+  #
+  # @param graph [String] URI of named graph that is dumped
+  # @returns [File]
+  #
+  def get_output_file(graph)
+    if @graph_to_file.key? graph
+      @graph_to_file[graph] 
+    else
+      filename = graph.rpartition(/\/|#/).pop
+      filename = if @graph_to_file.any? { |_, value| File.basename(value.path) == filename + ".nt" }
+                   filename + Digest::SHA1.hexdigest(graph) + ".nt" 
+                 else
+                   filename + ".nt"
+                 end
+      @graph_to_file[graph] = File.open(File.join("tmp", filename), "a")
+    end
+  end
+
   # Path to file where Fuseki Server's process ID is stored
   def pid_path
     File.join("tmp", "fuseki.pid")
@@ -225,6 +270,16 @@ namespace :fuseki do
     else
       false
     end
+  end
+
+  # Splits N-Quad into N-Triple and its named graph URI
+  #
+  # @param nquad [String]    Line of N-Quads file
+  # @returns [Array<String>] Pair of N-Triple and named graph URI
+  #
+  def split_nquad(nquad)
+    ntriple, graph = nquad.split(/\s(?=<[^>]+>\s*\.\s*$)/)
+    [(ntriple + " ."), graph.gsub(/^<|>\s*\.\s*$/, "")]
   end
 
   # Save Fuseki Server's process ID to a file
