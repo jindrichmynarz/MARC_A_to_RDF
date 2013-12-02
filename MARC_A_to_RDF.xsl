@@ -113,40 +113,30 @@
     <xsl:template match="marc:leader">
         <!-- 05 - Record Status -->
         <xsl:variable name="recordStatus" select="substring(text(), 6, 1)"/>
-        <xsl:choose>
-            <xsl:when test="$recordStatus = 'a'">
-                <!-- Increase in encoding level -->
-            </xsl:when>
-            <xsl:when test="$recordStatus = 'c'">
-                <!-- Corrected or revised -->
-            </xsl:when>
-            <xsl:when test="$recordStatus = 'd'">
-                <!-- Deleted -->
-            </xsl:when>
-            <xsl:when test="$recordStatus = 'n'">
-                <!-- New -->
-            </xsl:when>
-            <xsl:when test="$recordStatus = 'o'">
-                <!-- Obsolete -->
-            </xsl:when>
-            <xsl:when test="$recordStatus = 's'">
-                <!-- Deleted; heading split into two or more headings -->
-            </xsl:when>
-            <xsl:when test="$recordStatus = 'x'">
-                <!-- Deleted; heading replaced by another heading -->
-            </xsl:when>
-        </xsl:choose>
+        <xsl:if test="contains('a c d n o s x', $recordStatus)">
+            <skos:editorialNote xml:lang="en">
+                <xsl:choose>
+                  <xsl:when test="$recordStatus = 'a'">Increase in encoding level</xsl:when>
+                  <xsl:when test="$recordStatus = 'c'">Corrected or revised</xsl:when>
+                  <xsl:when test="$recordStatus = 'd'">Deleted</xsl:when>
+                  <xsl:when test="$recordStatus = 'n'">New</xsl:when>
+                  <xsl:when test="$recordStatus = 'o'">Obsolete</xsl:when>
+                  <xsl:when test="$recordStatus = 's'">Deleted; heading split into two or more headings</xsl:when>
+                  <xsl:when test="$recordStatus = 'x'">Deleted; heading replaced by another heading</xsl:when>
+                </xsl:choose>
+            </skos:editorialNote>
+        </xsl:if>
         
         <!-- 17 - Encoding level -->
         <xsl:variable name="encodingLevel" select="substring(text(), 18, 1)"/>
-        <xsl:choose>
-            <xsl:when test="$encodingLevel = 'n'">
-                <!-- Complete authority record -->
-            </xsl:when>
-            <xsl:when test="$encodingLevel = 'o'">
-                <!-- Incomplete authority record -->
-            </xsl:when>
-        </xsl:choose>
+        <xsl:if test="contains('n o', $encodingLevel)">
+            <skos:editorialNote xml:lang="en">
+                <xsl:choose>
+                    <xsl:when test="$encodingLevel = 'n'">Complete authority record</xsl:when>
+                    <xsl:when test="$encodingLevel = 'o'">Incomplete authority record</xsl:when>
+                </xsl:choose>
+            </skos:editorialNote>
+        </xsl:if>
     </xsl:template>
     
     <!-- Field templates -->
@@ -180,23 +170,17 @@
         
         <!-- 06 - Direct or indirect geographic subdivision -->
         <xsl:variable name="directOrIndirectGeographicSubdivision" select="substring(text(), 7, 1)"/>
-        <xsl:choose>
-            <xsl:when test="$directOrIndirectGeographicSubdivision = '#'">
-                <!-- Not subdivided geographically -->
-            </xsl:when>
-            <xsl:when test="$directOrIndirectGeographicSubdivision = 'd'">
-                <!-- Subdivided geographically-direct -->
-            </xsl:when>
-            <xsl:when test="$directOrIndirectGeographicSubdivision = 'i'">
-                <!-- Subdivided geographically-indirect -->
-            </xsl:when>
-            <xsl:when test="$directOrIndirectGeographicSubdivision = 'n'">
-                <!-- Not applicable -->
-            </xsl:when>
-            <xsl:when test="$directOrIndirectGeographicSubdivision = '|'">
-                <!-- No attempt to code -->
-            </xsl:when>
-        </xsl:choose>
+        <xsl:if test="contains('# d i n |', $directOrIndirectGeographicSubdivision)">
+            <!-- Code "|" ("No attempt to code") ignored. -->
+            <skos:scopeNote xml:lang="en">
+                <xsl:choose>
+                    <xsl:when test="$directOrIndirectGeographicSubdivision = '#'">Not subdivided geographically</xsl:when>
+                    <xsl:when test="$directOrIndirectGeographicSubdivision = 'd'">Subdivided geographically-direct</xsl:when>
+                    <xsl:when test="$directOrIndirectGeographicSubdivision = 'i'">Subdivided geographically-indirect</xsl:when>
+                    <xsl:when test="$directOrIndirectGeographicSubdivision = 'n'">Not applicable</xsl:when>
+                </xsl:choose>
+            </skos:scopeNote>
+        </xsl:if>
         
     </xsl:template>
     
@@ -221,58 +205,6 @@
             <rdf:type rdf:resource="http://www.loc.gov/mads/rdf/v1#Geographic"/>
         </xsl:if>
         <xsl:call-template name="mintConcept"/>
-    </xsl:template>
-    
-    <xsl:template match="marc:datafield[@tag = '360']">
-        <!-- http://loc.gov/marc/authority/ad360.html
-             Complex See Also Reference-Subject -->
-        <!-- Commenting out for the moment. Parsing is too irregular.
-        <xsl:apply-templates/>
-        -->
-    </xsl:template>
-    
-    <xsl:template match="marc:subfield[@code = 'a'][parent::marc:datafield[@tag = '360']]">
-        <xsl:variable name="linkType">skos:related</xsl:variable>
-        <xsl:variable name="references" select="tokenize(replace(., '^\s*;|;\s*$', ''), '\s*;\s*')"/>
-        <xsl:variable name="context" select="."/>
-        <xsl:for-each select="$references">
-            <xsl:variable name="reference" select="tokenize(., '\s*--\s*')"/>
-            <xsl:variable name="key" select="string-join(('lat', $reference), '|')"/>
-            <xsl:variable name="uris" select="key('indicesToIDs', $key, root($context))"/>
-            <xsl:choose>
-                <xsl:when test="not(empty($uris))">
-                    <xsl:for-each select="$uris">
-                        <xsl:element name="{$linkType}">
-                            <xsl:attribute name="rdf:resource" select="concat($conceptNs, encode-for-uri(.))"/>
-                        </xsl:element> 
-                    </xsl:for-each>
-                </xsl:when>
-                <!-- If no URI is found, create a blank node skos:Concept. -->
-                <xsl:otherwise>
-                    <xsl:variable name="prefLabel" select="$reference[position() = 1]"/>
-                    <xsl:variable name="elements" select="$reference[position() &gt; 1]"/>
-                    <xsl:element name="{$linkType}">
-                        <skos:Concept rdf:about="{f:mintClassURI('Concept', $context)}">
-                            <xsl:call-template name="temporaryConcept"/>
-                            <skos:prefLabel>
-                                <skosxl:Label rdf:about="{f:mintClassURI('Label', $context)}">
-                                    <skosxl:literalForm><xsl:value-of select="$prefLabel"/></skosxl:literalForm>
-                                    <xsl:if test="not(empty($elements))">
-                                        <mads:elementList rdf:parseType="Collection">
-                                            <xsl:for-each select="$elements">
-                                                <mads:Element rdf:about="{f:mintClassURI('Element', $context)}">
-                                                    <mads:elementValue><xsl:value-of select="."/></mads:elementValue>
-                                                </mads:Element>
-                                            </xsl:for-each>
-                                        </mads:elementList>
-                                    </xsl:if>
-                                </skosxl:Label>
-                            </skos:prefLabel>
-                        </skos:Concept>
-                    </xsl:element>
-                </xsl:otherwise>
-            </xsl:choose>
-        </xsl:for-each> 
     </xsl:template>
     
     <xsl:template match="marc:datafield[contains('450 451', @tag)]">
@@ -325,6 +257,7 @@
         </schema:citation>
     </xsl:template>
     
+    <!-- Mint new instance of skos:Concept -->
     <xsl:template name="mintConcept">
         <skosxl:prefLabel>
             <skosxl:Label rdf:about="{f:mintClassURI('Label', .)}">
@@ -362,6 +295,7 @@
         </xsl:if>
     </xsl:template>
     
+    <!-- Try to link to existing skos:Concept via compond key, else mint new skos:Concept -->
     <xsl:template name="linkConcept">
         <xsl:param name="linkType" as="xsd:string"/>
         <xsl:variable name="uris" select="f:conceptToURIs(.)"/>
@@ -385,6 +319,7 @@
         </xsl:choose>
     </xsl:template>
     
+    <!-- Boilerplate for temporary skos:Concept -->
     <xsl:template name="temporaryConcept">
         <skos:editorialNote xml:lang="en">Temporary concept to be linked</skos:editorialNote>
     </xsl:template>
