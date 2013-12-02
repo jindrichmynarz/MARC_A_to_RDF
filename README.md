@@ -12,9 +12,10 @@ Steps of the transformation are implemented as Rake tasks. Use `rake -T` to list
 2. `rake fuseki:load` to load the created RDF in Jena TDB.
 3. `rake fuseki:start` to start a SPARQL endpoint for the loaded data.
 4. `rake sparql:enrich` to issue several SPARQL Update requests that will enrich the processed data.
-5. `rake fuseki:stop` to stop the SPARQL endpoint.
-6. `rake fuseki:dump` to export the transformed dataset into [NQuads](http://www.w3.org/TR/n-quads/) file (`tmp/dump.nq`). 
-7. `rake fuseki:purge` to clear all Jena TDB files.
+5. `rake sparql:metadata` to compute dataset statistics and generate corresponding metadata in separate named graph.
+6. `rake fuseki:stop` to stop the SPARQL endpoint.
+7. `rake fuseki:dump` to export the transformed dataset into [NQuads](http://www.w3.org/TR/n-quads/) file (`tmp/dump.nq`). 
+8. `rake fuseki:purge` to clear all Jena TDB files.
 
 ## Dependencies
 

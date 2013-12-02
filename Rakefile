@@ -245,15 +245,12 @@ namespace :sparql do
 
   desc "Enrich dataset with inferred triples using SPARQL Update"
   task :enrich => :connect do
-    file_names = Dir[File.join("queries", "enrichment", "*.ru")]
-    
-    # Metadata generation needs to come last
-    metadata_request_index = file_names.index { |file_name| file_name.end_with? "generate_metadata.ru" }
-    file_names.push(file_names.delete_at(metadata_request_index))
+    execute_queries_in_dir("enrichment", @sparql)
+  end
 
-    file_names.each do |file_name|
-      @sparql.update(add_graph(File.read(file_name)))
-    end
+  desc "Generate metadata describing the dataset"
+  task :metadata => :connect do
+    execute_queries_in_dir("metadata", @sparql)
   end
 
   # Adds named graph URI to SPARQL queries
@@ -263,5 +260,19 @@ namespace :sparql do
   #
   def add_graph(query_template)
     query_template.gsub(/\?graph/i, "<#{@named_graph}>")
+  end
+
+  # Executes all SPARQL queries stored as files in `directory` on `sparql_endpoint`
+  #
+  # @param directory [String]               Directory name (`/queries/{directory}`)
+  # @param sparql_endpoint [SPARQL::Client] SPARQL Update client
+  #
+  def execute_queries_in_dir(directory, sparql_endpoint)
+    raise "Directory queries/#{directory} doesn't exist." unless File.directory?(File.join("queries", directory)) 
+    file_names = Dir[File.join("queries", directory, "*.ru")]
+    
+    file_names.each do |file_name|
+      sparql_endpoint.update(add_graph(File.read(file_name)))
+    end
   end
 end
