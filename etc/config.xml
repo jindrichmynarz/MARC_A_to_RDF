@@ -21,11 +21,17 @@
     <!-- Configuration of software dependencies -->
     <deps>
         <dep name="jena">
-            <!-- Path to $JENA_HOME. If you have Jena installed, you can leave this empty. -->
+            <!--
+               Path to home directory of Jena.
+               If you have the environment variable $JENA_HOME set, you can leave this empty.
+            -->
             <home></home>
         </dep>
         <dep name="fuseki">
-            <!-- Path to $FUSEKI_HOME. If you have Fuseki installed, you can leave this empty. -->
+            <!--
+               Path to home directory of Fuseki server.
+               If you have the environment variable $FUSEKI_HOME set, you can leave this empty.
+            -->
             <home></home>
             <!-- Port that will be used by Fuseki server -->
             <port>3333</port>
