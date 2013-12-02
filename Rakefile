@@ -65,7 +65,7 @@ namespace :fuseki do
   end
 
   desc "Dump data to into tmp directory"
-  task :dump => [:get_config, :jena_home] do
+  task :dump => :get_config do
     output_path = File.join("tmp", "dump.nq")
     `java -cp #{@fuseki_path} tdb.tdbdump --loc db > #{output_path}`
     
@@ -81,19 +81,10 @@ namespace :fuseki do
     File.delete output_path # Delete temporary dump file
 
     # Close all output files
-    ntriple_files = @graph_to_file.values.map { |file| file.path }
+    ntriple_files = @graph_to_file.values.map { |file| File.basename(file.path) }
     @graph_to_file.each_value { |file| file.close }
   
-    rdfcat = File.join(@jena_home, "bin", "rdfcat")
-    turtle_files = ntriple_files.map do |file|
-      turtle_file_name = File.basename(file, File.extname(file)) + ".ttl"
-      turtle_file = File.join("tmp", turtle_file_name)
-      `#{rdfcat} -out ttl #{file} > #{turtle_file}`
-      File.delete file # Delete temporary N-Triples file
-      turtle_file_name
-    end
-
-    puts "Data dumped into files: #{turtle_files.join(", ")}"
+    puts "Data dumped into files: #{ntriple_files.join(", ")}"
   end
 
   # Get Fuseki configuration
