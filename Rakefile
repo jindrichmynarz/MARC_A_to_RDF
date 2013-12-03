@@ -66,6 +66,7 @@ namespace :fuseki do
 
   desc "Dump data to into tmp directory"
   task :dump => :get_config do
+    puts "Dumping the database..."
     output_path = File.join("tmp", "dump.nq")
     `java -cp #{@fuseki_path} tdb.tdbdump --loc db > #{output_path}`
     

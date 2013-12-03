@@ -14,7 +14,7 @@ Steps of the transformation are implemented as Rake tasks. Use `rake -T` to list
 4. `rake sparql:enrich` to issue several SPARQL Update requests that will enrich the processed data.
 5. `rake sparql:metadata` to compute dataset statistics and generate corresponding metadata in separate named graph.
 6. `rake fuseki:stop` to stop the SPARQL endpoint.
-7. `rake fuseki:dump` to export the transformed dataset into [NQuads](http://www.w3.org/TR/n-quads/) file (`tmp/dump.nq`). 
+7. `rake fuseki:dump` to export the transformed dataset into [N-Quads](http://www.w3.org/TR/n-quads/) files located in the `tmp` directory.
 8. `rake fuseki:purge` to clear all Jena TDB files.
 
 ## Dependencies
@@ -23,3 +23,7 @@ Steps of the transformation are implemented as Rake tasks. Use `rake -T` to list
 * [Jena](http://jena.apache.org/): uses Jena TDB as database 
 * [Rake](http://rake.rubyforge.org/): works with Ruby version 1.8.7 or newer
 * [Saxon](http://saxon.sourceforge.net/): version 9.x, can be replaced by any XSLT 2.0 processor
+
+## Known caveats
+
+In case you get timeout errors (`Timeout::Error`) for some of the enrichment or metadata SPARQL generation queries, try increasing the timeout limit (`ja:cxtValue` property for `ja:cxtName "arq:queryTimeout"`) in the Fuseki server configuration in `etc/fuseki.ttl` and then run the enrichment Rake task again.  
