@@ -315,7 +315,7 @@ namespace :sparql do
   #
   def execute_queries_in_dir(directory, sparql_endpoint)
     raise "Directory queries/#{directory} doesn't exist." unless File.directory?(File.join("queries", directory)) 
-    file_names = Dir[File.join("queries", directory, "*.ru")]
+    file_names = Dir[File.join("queries", directory, "*.ru")].sort
     
     file_names.each do |file_name|
       sparql_endpoint.update(add_graph(File.read(file_name)))
