@@ -82,7 +82,7 @@ namespace :fuseki do
     File.delete output_path # Delete temporary dump file
 
     # Close all output files
-    ntriple_files = @graph_to_file.values.map { |file| File.basename(file.path) }
+    ntriple_files = @graph_to_file.values.map { |file| file.path }
     @graph_to_file.each_value { |file| file.close }
   
     puts "Data dumped into files: #{ntriple_files.join(", ")}"
